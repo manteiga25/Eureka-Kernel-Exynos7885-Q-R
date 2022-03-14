@@ -338,8 +338,8 @@ USER()
 RENAME()
 {
 	# Give proper name to kernel and zip name
-	VERSION="Eureka_R"$REV"_"$DEVICE_Axxx"_"$SELINUX_STATUS""P/Q/R
-	ZIPNAME="Eureka_R"$REV"_"$DEVICE_Axxx"_"$TYPE"_"$SELINUX_STATUS""$ANDROID".zip"
+	VERSION="Eureka_R"$REV"_"$DEVICE_Axxx"_"$SELINUX_STATUS""Q/R
+	ZIPNAME="Eureka_R"$REV"_"$DEVICE_Axxx"_"$SELINUX_STATUS""$ANDROID".zip"
 }
 
 SELINUX()
@@ -350,13 +350,11 @@ SELINUX()
 	echo -e "***************************************************************";
 	echo " Available versions:";
 	echo " "
-	echo "  1. Build OneUI version of Eureka with ENFORCING SElinux";
+	echo "  1. Build Eureka with ENFORCING SElinux";
 	echo " "
-	echo "  2. Build GSI version of Eureka with PERMISSIVE SElinux";
+	echo "  2. Build Eureka with PERMISSIVE SElinux";
 	echo " "
-	echo "  3. Build GSI version of Eureka with ENFORCING SElinux";
-	echo " "
-	echo "  4. Leave empty to exit this script";
+	echo "  3. Leave empty to exit this script";
 	echo " "
 	echo " "
 	read -n 1 -p "Select your choice: " -s choice;
@@ -364,20 +362,12 @@ SELINUX()
 		1)
 		   {
 			export SELINUX_B=enforcing
-			export SELINUX_STATUS=""
-			export TYPE="oneui"
+			export SELINUX_STATUS="$SELINUX_B"_
 		   };;
 		2)
 		   {
 		   	export SELINUX_B=permissive
 		   	export SELINUX_STATUS="$SELINUX_B"_
-		   	export TYPE="gsi"
-		   };;
-		3)
-		   {
-			export SELINUX_B=enforcing
-			export SELINUX_STATUS="$SELINUX_B"_
-			export TYPE="gsi"
 		   };;
 		*)
 		   {
@@ -387,54 +377,12 @@ SELINUX()
 			exit 1
 		   };;
 	esac
-
-		if [ ${SELINUX_B} == "permissive" ]
-		then
-		echo " "
-		echo " Using permissive selinux"
-		elif [ ${SELINUX_B} == "enforcing" ]
-		then
-		echo " "
-		echo " Using enforcing selinux"
-		fi
 	sleep 1
 }
 
-MTP_FIX()
-{
-	# This is needed for GSI version only !!
-	if [ ${TYPE} == "gsi" ]
-	then
-	{
-	   echo " "
-	   echo "       Setting up MTP for GSI.."
-	   
-	   if [ ! -d drivers/usb/gadget ]; then
-		mkdir drivers/usb/gadget;
-	   fi;
-	   cp -rf $(pwd)/build_files/gsi/gadget drivers/usb/
-	   sleep 2
-	}
-	elif [ ${TYPE} == "oneui" ]
-	then
-	{
-	   if [ ! -d drivers/usb/gadget ]; then
-		mkdir drivers/usb/gadget;
-	   fi;
-	   cp -rf $(pwd)/build_files/oneui/gadget drivers/usb/
-	}
-	fi
-}
 
 ONEUI_STATE()
 {	
-	# Always return gadget and selinux folders to OneUI state else git will mark those folders as changed
-	cp -rf $(pwd)/build_files/oneui/gadget drivers/usb/
-	cp -rf $(pwd)/build_files/oneui/selinux security/
-	
-	rm -rf drivers/usb/gadget/.oneui_mtp
-	rm -rf security/selinux/.enforcing
-	
 	# Since wireguard checks for update during compilation, its group will change from $user to root.
 	# So change it back to default user group. Do this only for me. Gabriel does not need that i guess.
 	if [ ${USER} == "Chatur" ]
@@ -443,16 +391,6 @@ ONEUI_STATE()
 	chown -R $PCUSER $(pwd)/net/wireguard
 	}
 	fi
-}
-
-UPDATE_BUILD_FILES()
-{
-	# At start of build script, gadget and selinux folders are always in OneUI state. So if ever,
-	# those folders are newer than the one in build_files/oneui/ folder, our build_files/oneui/
-	# need to be updated else drivers/usb/gadget and security/security will be overwritten by
-	# old files found in build_files/oneui/gadget.
-	cp -rf $(pwd)/drivers/usb/gadget build_files/oneui/
-	cp -rf $(pwd)/security/selinux build_files/oneui/
 }
 
 DISPLAY_ELAPSED_TIME()
@@ -614,7 +552,6 @@ echo " Some informations about parameters set:		"
 echo -e "    > Architecture: $ARCH				"
 echo    "    > Jobs: $CORES					"
 echo    "    > Revision for this build: R$REV			"
-echo    "    > Version chosen: $TYPE				"
 echo    "    > SElinux Status: $SELINUX_B			"
 echo    "    > Kernel Name Template: $VERSION			"
 echo    "    > Build user: $KBUILD_BUILD_USER			"
@@ -640,7 +577,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A105
-		DEFCONFIG=exynos7885-a10_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a10_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -651,7 +588,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A205
-		DEFCONFIG=exynos7885-a20_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a20_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -662,7 +599,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A202
-		DEFCONFIG=exynos7885-a20e_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a20e_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -673,7 +610,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A305
-		DEFCONFIG=exynos7885-a30_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a30_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -684,7 +621,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A307
-		DEFCONFIG=exynos7885-a30s_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a30s_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -695,7 +632,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A405
-		DEFCONFIG=exynos7885-a40_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos7885-a40_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
@@ -706,7 +643,7 @@ do
 		OS_MENU
 		echo " "
 		DEVICE_Axxx=$DEVICE_A505
-		DEFCONFIG=exynos9610-a50_"$TYPE"_"$SELINUX_STATUS"defconfig
+		DEFCONFIG=exynos9610-a50_"$SELINUX_STATUS"defconfig
 		COMMON_STEPS
 		break
 		;;
